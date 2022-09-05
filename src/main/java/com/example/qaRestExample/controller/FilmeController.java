@@ -3,11 +3,15 @@ package com.example.qaRestExample.controller;
 import com.example.qaRestExample.model.Filme;
 import com.example.qaRestExample.repository.FilmeRepository;
 import com.example.qaRestExample.response.ResponseHandler;
-import io.swagger.models.auth.In;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @RestController
 public class FilmeController {
@@ -45,5 +49,74 @@ public class FilmeController {
         objetoFilme.setGenero(filme.getGenero());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(filmeRepository.save(objetoFilme));
+    }
+
+    @DeleteMapping(path = "/filme/{codigo}")
+    public void deletarFilmePorId(@PathVariable("codigo") Integer codigo){
+        filmeRepository.findById(codigo)
+                .map(record -> {
+                    filmeRepository.deleteById(codigo);
+                    return Void.TYPE;
+                }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @PutMapping(path = "/filme/{codigo}")
+    public ResponseEntity editarFilmePut(@PathVariable("codigo") Integer codigo, @RequestBody @Validated Filme filme){
+        Optional<Filme> filmeOject = filmeRepository.findById(codigo);
+
+        if(!filmeOject.isPresent()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("message: Filme não encontrado");
+        }
+
+        var filmeEditado = filmeOject.get();
+        filmeEditado.getCodigo();
+        filmeEditado.setNome(filme.getNome());
+        filmeEditado.setSinopse(filme.getSinopse());
+        filmeEditado.setGenero(filme.getGenero());
+        filmeEditado.setFaixaEtaria(filme.getFaixaEtaria());
+        return ResponseEntity.status(HttpStatus.OK).body(filmeRepository.save(filmeEditado));
+
+    }
+
+    @PatchMapping(path = "/filme/{codigo}")
+    public ResponseEntity editarFilmeComPatch(@PathVariable("codigo") Integer codigo, @RequestBody Filme filme){
+        Optional<Filme> filmeOject = filmeRepository.findById(codigo);
+
+        if(!filmeOject.isPresent()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("message: Filme não encontrado");
+        }
+
+        var filmeEditado = filmeOject.get();
+        filmeEditado.getCodigo();
+
+        if(filme.getNome() == null){
+            filmeEditado.getNome();
+        } else {
+            filmeEditado.setNome(filme.getNome());
+        }
+
+        if(filme.getGenero() == null){
+            filmeEditado.getGenero();
+        } else {
+            filmeEditado.setGenero(filme.getGenero());
+        }
+
+        if(filme.getSinopse() == null){
+            filmeEditado.getSinopse();
+        } else {
+            filmeEditado.setSinopse(filme.getSinopse());
+        }
+
+        if(filme.getFaixaEtaria() == null){
+            filmeEditado.getFaixaEtaria();
+        } else {
+            filmeEditado.setFaixaEtaria(filme.getFaixaEtaria());
+        }
+
+        filmeEditado.setNome(filme.getNome());
+        filmeEditado.setSinopse(filme.getSinopse());
+        filmeEditado.setGenero(filme.getGenero());
+        filmeEditado.setFaixaEtaria(filme.getFaixaEtaria());
+        return ResponseEntity.status(HttpStatus.OK).body(filmeRepository.save(filmeEditado));
     }
 }
